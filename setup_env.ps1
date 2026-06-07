@@ -6,11 +6,21 @@ Write-Host " Starting Automatic Environment & API Key Provisioning " -Foreground
 Write-Host "======================================================" -ForegroundColor Cyan
 
 # 1. Detect Active Project
-$PROJECT_ID = (gcloud config get-value project 2>$null)
+$PROJECT_ID = $env:DEVSHELL_PROJECT_ID
 if (-not $PROJECT_ID) {
-    Write-Error "No active GCP project found in gcloud. Please run: gcloud config set project YOUR_PROJECT_ID"
+    $PROJECT_ID = $env:GOOGLE_CLOUD_PROJECT
+}
+if (-not $PROJECT_ID) {
+    $PROJECT_ID = (gcloud config get-value project 2>$null)
+}
+
+if (-not $PROJECT_ID) {
+    Write-Error "No active GCP project found. Please run: gcloud config set project YOUR_PROJECT_ID"
     Exit 1
 }
+
+# Ensure the gcloud active config is set to this project
+gcloud config set project $PROJECT_ID --quiet 2>$null | Out-Null
 
 Write-Host "Detected active GCP project: $PROJECT_ID" -ForegroundColor Green
 

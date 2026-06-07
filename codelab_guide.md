@@ -41,6 +41,21 @@ gcloud config set project YOUR_GCP_PROJECT_ID
 gcloud auth application-default login
 ```
 
+> [!IMPORTANT]
+> **Permission Denied / Troubleshooting `AUTH_PERMISSION_DENIED`:**
+> If you encounter an error like `AUTH_PERMISSION_DENIED` or `Permission denied to enable service` when running the setup script, it means your active GCP user account does not have sufficient permissions (such as `Owner`, `Editor`, or `Service Usage Admin` + `API Keys Admin` roles) on the current project.
+> 
+> To resolve this:
+> 1. Ensure you set `gcloud config set project` to a project where you have administrative access (e.g., your personal sandbox project or a pre-prod project).
+> 2. You can view all projects available to your account by running:
+>    ```bash
+>    gcloud projects list
+>    ```
+> 3. Switch to a personal/sandbox project if needed:
+>    ```bash
+>    gcloud config set project <your-sandbox-project-id>
+>    ```
+
 ---
 
 ## 3. Clone the Repository & Configure Environment
@@ -54,8 +69,31 @@ git clone https://github.com/munisekhar-plutos/recon-iq.git
 cd recon-iq
 ```
 
-### Configure your Local Environment
-Create a `.env` file in the project root to store your runtime settings. Use this template:
+### Configure your Local Environment (One-Click Auto-Setup)
+
+Instead of manually creating a `.env` file, enabling Google APIs, and generating/copying an API key, you can run a **single automated script** that does it all for you! This script will automatically:
+1. Detect your current active `gcloud` project.
+2. Enable all required APIs in your GCP project (including the `apikeys`, `aiplatform`, and `bigquery` services).
+3. Check if a secure API Key named `"Recon-IQ Gemini Key"` exists, and if not, **automatically generate one** under your GCP account.
+4. Retrieve the secret API key string and dynamically write a complete, perfectly configured `.env` file!
+
+Run the appropriate command for your platform:
+
+#### Windows (PowerShell)
+```powershell
+.\setup_env.ps1
+```
+
+#### macOS/Linux (Bash)
+```bash
+chmod +x setup_env.sh
+./setup_env.sh
+```
+
+---
+
+### Manual Environment Template (Optional Fallback)
+If you prefer to configure your parameters manually, create a `.env` file in the project root and populate it with your own settings:
 
 ```ini
 # Recon-IQ Environment Configurations

@@ -7,11 +7,22 @@ echo " Starting Automatic Environment & API Key Provisioning "
 echo "======================================================"
 
 # 1. Detect Active Project
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+PROJECT_ID=""
+if [ -n "$DEVSHELL_PROJECT_ID" ]; then
+    PROJECT_ID="$DEVSHELL_PROJECT_ID"
+elif [ -n "$GOOGLE_CLOUD_PROJECT" ]; then
+    PROJECT_ID="$GOOGLE_CLOUD_PROJECT"
+else
+    PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+fi
+
 if [ -z "$PROJECT_ID" ]; then
-    echo -e "\033[1;31mNo active GCP project found in gcloud. Please run: gcloud config set project YOUR_PROJECT_ID\033[0m"
+    echo -e "\033[1;31mNo active GCP project found. Please run: gcloud config set project YOUR_PROJECT_ID\033[0m"
     exit 1
 fi
+
+# Ensure the gcloud active config is set to this project
+gcloud config set project "$PROJECT_ID" --quiet 2>/dev/null || true
 
 echo -e "\033[1;32mDetected active GCP project: $PROJECT_ID\033[0m"
 
