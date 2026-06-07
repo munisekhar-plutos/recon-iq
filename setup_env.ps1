@@ -50,8 +50,21 @@ if ($keysJson.Trim()) {
 
 if (-not $KEY_NAME) {
     Write-Host "Creating a new API Key named 'Recon-IQ Gemini Key' in project '$PROJECT_ID'..." -ForegroundColor Yellow
-    $createResult = gcloud services api-keys create --display-name="Recon-IQ Gemini Key" --format="json" | Out-String | ConvertFrom-Json
-    $KEY_NAME = $createResult.name
+    gcloud services api-keys create --display-name="Recon-IQ Gemini Key" --quiet | Out-Null
+    
+    # Query list again to get the actual key name, avoiding the async operation name
+    $keysJson = gcloud services api-keys list --format="json" | Out-String
+    if ($keysJson.Trim()) {
+        $keys = $keysJson | ConvertFrom-Json
+        if ($keys -is [array]) {
+            $existingKey = $keys | Where-Object { $_.displayName -eq "Recon-IQ Gemini Key" }
+        } else {
+            $existingKey = if ($keys.displayName -eq "Recon-IQ Gemini Key") { $keys } else { $null }
+        }
+        if ($existingKey) {
+            $KEY_NAME = $existingKey.name
+        }
+    }
 }
 
 # 4. Get the Key String

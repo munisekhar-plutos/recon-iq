@@ -36,7 +36,10 @@ KEY_NAME=$(gcloud services api-keys list --format="value(name)" --filter="displa
 
 if [ -z "$KEY_NAME" ]; then
     echo "Creating a new API Key named 'Recon-IQ Gemini Key' in project '$PROJECT_ID'..."
-    KEY_NAME=$(gcloud services api-keys create --display-name="Recon-IQ Gemini Key" --format="value(name)")
+    gcloud services api-keys create --display-name="Recon-IQ Gemini Key" --quiet > /dev/null
+    
+    # Query list again to get the actual key name, avoiding the async operation name
+    KEY_NAME=$(gcloud services api-keys list --format="value(name)" --filter="displayName='Recon-IQ Gemini Key'" | head -n 1)
 fi
 
 # 4. Get the Key String
