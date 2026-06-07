@@ -53,7 +53,7 @@ To run the agent using the native Google Agent SDK (ADK) web chat server—just 
 2. **Install Project Dependencies & Google ADK**:
    ```powershell
    pip install -r requirements.txt
-   pip install google-adk==1.28.0
+   pip install google-adk
    ```
 
 3. **Authenticate with Google Cloud (Application Default Credentials)**:

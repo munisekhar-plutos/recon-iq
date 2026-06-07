@@ -139,7 +139,7 @@ python -m venv .venv
 
 # Install requirements & google-adk CLI
 pip install -r requirements.txt
-pip install google-adk==1.28.0
+pip install google-adk
 ```
 
 ### macOS/Linux (Bash)
@@ -152,7 +152,7 @@ source .venv/bin/activate
 
 # Install requirements & google-adk CLI
 pip install -r requirements.txt
-pip install google-adk==1.28.0
+pip install google-adk
 ```
 
 ---
