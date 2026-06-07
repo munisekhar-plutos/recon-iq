@@ -14,6 +14,29 @@ Recon-IQ is fully modular and follows strict clean-code MVC principles:
 
 ---
 
+## ⚡ Quickstart: One-Command Local Environment Setup
+
+To automatically configure your local development environment with absolutely **zero manual editing**, you can use our smart auto-provisioning tool. 
+
+This tool will automatically:
+1. Detect your current active `gcloud` project.
+2. Enable required APIs in your GCP Project (including the `apikeys` and `aiplatform` service endpoints).
+3. Check if a secure `"Recon-IQ Gemini Key"` API Key exists, and if not, **automatically generate one**.
+4. Retrieve the secret API key string and write a complete, fully configured `.env` file!
+
+### Run the Provisioning Command:
+- **On Windows (PowerShell)**:
+  ```powershell
+  .\setup_env.ps1
+  ```
+- **On macOS/Linux (Bash)**:
+  ```bash
+  chmod +x setup_env.sh
+  ./setup_env.sh
+  ```
+
+---
+
 ## 🔌 Running the App (Two Interactive Developer Options)
 
 You can run and interact with the Recon-IQ agent in two different ways depending on your development workflow:
