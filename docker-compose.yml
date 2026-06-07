@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  recon-iq-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: recon_iq_gateway
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./secure_keys:/app/secrets:ro
+      - ./.env:/app/.env:ro
+      - spooled_file_temp:/tmp/spooled_files
+    depends_on:
+      - recon-iq-metadata
+    networks:
+      - production_network
+
+  recon-iq-metadata:
+    image: mongo:6.0
+    container_name: recon_iq_metadata
+    ports:
+      - "27017:27017"
+    volumes:
+      - metadata_volume:/data/db
+    networks:
+      - production_network
+
+  recon-iq-metadata-admin:
+    image: mongo-express:latest
+    container_name: recon_iq_metadata_admin
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=recon-iq-metadata
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+    depends_on:
+      - recon-iq-metadata
+    networks:
+      - production_network
+
+volumes:
+  metadata_volume:
+    driver: local
+  spooled_file_temp:
+    driver: local
+
+networks:
+  production_network:
+    driver: bridge

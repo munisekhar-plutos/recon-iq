@@ -1,0 +1,71 @@
+name: Deploy Recon-IQ to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: "YOUR_GCP_PROJECT_ID" # Replace with your GCP Project ID
+  GAR_LOCATION: us-central1 # Replace with your Artifact Registry region
+  SERVICE: recon-iq-gateway # Cloud Run Service Name
+  REGION: us-central1 # Cloud Run region
+
+jobs:
+  deploy:
+    name: Build & Deploy to Cloud Run
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write # Required for keyless OIDC authentication
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Authenticates to GCP. Supports OIDC Workload Identity Federation (recommended)
+      # or Service Account Keys stored in GitHub Secrets (GCP_SA_KEY)
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # (Optional) Preferred Modern OIDC Configuration
+          # workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider'
+          # service_account: 'recon-iq-cloud-runner@recon-iq-production.iam.gserviceaccount.com'
+          
+          # Fallback: Traditional JSON Key stored in secrets.GCP_SA_KEY
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker authentication for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
+
+      - name: Create Artifact Registry Repository if not exists
+        run: |
+          gcloud artifacts repositories create recon-iq-repo \
+            --repository-format=docker \
+            --location=${{ env.GAR_LOCATION }} \
+            --description="Recon-IQ Docker Repository" \
+            --quiet || true
+
+      - name: Build and Push Container Image
+        run: |
+          IMAGE_TAG="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/recon-iq-repo/${{ env.SERVICE }}:${{ github.sha }}"
+          docker build -t $IMAGE_TAG .
+          docker push $IMAGE_TAG
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Deploy to Google Cloud Run (Keyless)
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/recon-iq-repo/${{ env.SERVICE }}:${{ github.sha }}
+          # Execute the container directly under the cloud-runner IAM identity (No static keys!)
+          flags: |
+            --service-account=recon-iq-cloud-runner@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+            --allow-unauthenticated
